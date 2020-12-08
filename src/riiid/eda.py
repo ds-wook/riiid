@@ -11,7 +11,6 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedKFold
 from lightgbm import LGBMClassifier
 import pickle
-import riiideducation
 
 
 # %% [markdown]
@@ -35,17 +34,10 @@ train = pd.read_csv(
 )
 
 train = train.sort_values(['timestamp'], ascending=True)
-questions = pd.read_csv(path + 'questions.csv')
-lectures = pd.read_csv(path + 'lectures.csv')
+questions = pd.read_csv(path + 'questions.csv',
+                        usecols=[0, 3],
+                        dtype={'question_id': 'int16', 'part': 'int8'})
 print('Train shape:', train.shape)
-
-
-
-# %%
-
-
-print('Missing Value')
-train.isnull().sum() / train.shape[0]
 
 
 # %%
@@ -169,7 +161,6 @@ plt.show()
 
 
 train = train.loc[train['answered_correctly'] != -1].reset_index(drop=True)
-train = train.drop(['timestamp', 'content_type_id'], axis=1)
 train['prior_question_had_explanation'] =\
     train['prior_question_had_explanation'].fillna(value=False).astype(bool)
 train.head()
@@ -191,7 +182,7 @@ user_answers_df
 content_answers_df =\
     train.groupby('content_id').agg(agg_dict).copy()
 content_answers_df.columns = ['mean_accuracy', 'question_asked']
-content_answers_df
+content_answers_df.head()
 
 
 # %%
@@ -201,9 +192,15 @@ train = train.iloc[90000000:, :]
 
 
 # %%
-
+questions.shape
+# %%
+train.head()
+# %%
 train = train.merge(user_answers_df, on='user_id', how='left')
 train = train.merge(content_answers_df, how='left', on='content_id')
+train = pd.merge(train, questions,
+                 left_on='content_id', right_on='question_id', how='left')
+train.drop(['question_id'], axis=1, inplace=True)
 train.head()
 
 
@@ -216,15 +213,15 @@ le = LabelEncoder()
 train['prior_question_had_explanation'] =\
     le.fit_transform(train['prior_question_had_explanation'])
 train = train.sort_values(['user_id'])
+train.head()
 
 
 # %%
 
-
 target = train['answered_correctly']
 columns = ['mean_user_accuracy', 'questions_answered',
            'mean_accuracy', 'question_asked',
-           'prior_question_had_explanation']
+           'prior_question_had_explanation', 'part']
 train_x = train[columns]
 
 
@@ -296,3 +293,12 @@ del target
 
 user_answers_df.to_csv('../../res/user_answers_df.csv')
 content_answers_df.to_csv('../../res/content_answers_df.csv')
+
+# %%
+import joblib
+# %%
+for i, model in enumerate(models):
+    joblib.dump(model, f'lgbm_oof{i + 1}.pkl')
+# %%
+
+# %%
