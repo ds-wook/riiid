@@ -6,7 +6,6 @@ from cleaning.dataset import X_train, X_valid, y_train, y_valid
 
 if __name__ == "__main__":
 
-    '''
     bayesian_params = {
         'learning_rate': (0.01, 0.5),
         'max_depth': (1, 30),
@@ -23,15 +22,8 @@ if __name__ == "__main__":
         'feature_fraction': max(min(lgb_bo['feature_fraction'], 1), 0),
         'subsample': max(min(lgb_bo['subsample'], 1), 0)
     }
-    '''
-    params = {
-        'learning_rate': 0.1796,
-        'max_depth': 24,
-        'num_leaves': 82,
-        'feature_fraction': 0.9912,
-        'subsample': 0.8068
-    }
+
     lgb_model = pipeline_lgb(train, params)
     lgb_model.fit(X_train, y_train)
-    lgb_pred = lgb_model['classifier'].predict_proba(X_valid)[:, 1]
+    lgb_pred = lgb_model.predict_proba(X_valid)[:, 1]
     print(f'ROC_AUC: {roc_auc_score(y_valid, lgb_pred):.4f}')

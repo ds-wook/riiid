@@ -12,8 +12,8 @@ np.seterr(divide='ignore', invalid='ignore')
 def pipeline_lgb(
         train: pd.DataFrame,
         params: Dict[str, Union[float, int]]) -> LGBMClassifier:
-    numeric_features = ['prior_question_elasped_time', 'count',
-                        'user_precent_correct', 'question_precent_correct']
+    numeric_features = ['prior_question_elapsed_time', 'count',
+                        'user_percent_correct', 'question_percent_correct']
     numeric_transformer = Pipeline(steps=[
             ('imputer', SimpleImputer()),
             ('scaler', StandardScaler())])
@@ -28,8 +28,8 @@ def pipeline_lgb(
             ('cat', categorical_transformer, categorical_features)])
 
     lgb_model = Pipeline(
-        ('preprocessor', preprocessor),
-        ('classifier', LGBMClassifier())
-    )
-    lgb_model['classifier'].set_params(**params)
+        steps=[
+            ('preprocessor', preprocessor),
+            ('classifier', LGBMClassifier(**params))])
+
     return lgb_model
