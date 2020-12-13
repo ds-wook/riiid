@@ -1,7 +1,9 @@
+from typing import Tuple
+
 import datatable as dt
 import pandas as pd
 import numpy as np
-from typing import Tuple
+
 np.seterr(divide='ignore', invalid='ignore')
 path = '../../kaggle/input/riiid-test-answer-prediction/'
 
@@ -14,7 +16,7 @@ def data_preprocessing(path: str) -> Tuple[pd.DataFrame, pd.Series]:
     train = train.to_pandas()
 
     train =\
-        train.loc[(train['content_type_id'] == False), columns + [target_col]]
+        train.loc[(train['content_type_id'] == 0), columns + [target_col]]
 
     user = train.groupby('user_id')[target_col].agg(['sum', 'count'])
     user['user_percent_correct'] = user['sum'] / user['count']
